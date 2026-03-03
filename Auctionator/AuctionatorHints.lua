@@ -54,8 +54,11 @@ function Atr_BuildHints (itemName)
 
 	-- Auctionator Full Scan
 	
-	if (itemName ~= nil and gAtr_ScanDB and type(gAtr_ScanDB[itemName]) == "number") then
-		Atr_AppendHint (results, gAtr_ScanDB[itemName], ZT("Auctionator scan data"));
+	if (itemName ~= nil and gAtr_ScanDB) then
+		local scanPrice = gAtr_ScanDB[itemName];
+		if (type(scanPrice) == "number") then
+			Atr_AppendHint (results, scanPrice, ZT("Auctionator scan data"));
+		end
 	end
 
 	-- most recent historical price
