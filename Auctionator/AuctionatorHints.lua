@@ -765,7 +765,7 @@ function Atr_CalcDisenchantPrice (itemType, itemRarity, itemLevel)
 				local x;
 				for x = 3,#ta,3 do
 					local price = Atr_GetAuctionPriceDE (ta[x+2]);
-					if (price) then
+					if (price and type(price) == "number") then
 						dePrice = dePrice + (ta[x] * ta[x+1] * price);
 					end
 				end
