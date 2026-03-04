@@ -1036,9 +1036,9 @@ function Atr_AuctionFrameTab_OnClick (self, index, down)
 			if (Atr_SellBrowser_Toggle) then Atr_SellBrowser_Toggle:Hide(); end
 			if (Atr_SellControls) then Atr_SellControls:Show(); end
 			if (Atr_SB_OnTabShown) then Atr_SB_OnTabShown(); end
-            -- SELL: make the auctions list short
+            -- SELL: make the auctions list short (4 lines of height)
             if (AuctionatorScrollFrame) then
-                AuctionatorScrollFrame:SetHeight(60);
+                AuctionatorScrollFrame:SetHeight(64);
             end
 		else
 			Atr_Hlist:Show();
