@@ -54,8 +54,11 @@ function Atr_BuildHints (itemName)
 
 	-- Auctionator Full Scan
 	
-	if (itemName ~= nil and gAtr_ScanDB[itemName] ~= nil) then
-		Atr_AppendHint (results, gAtr_ScanDB[itemName], ZT("Auctionator scan data"));
+	if (itemName ~= nil and gAtr_ScanDB) then
+		local scanPrice = gAtr_ScanDB[itemName];
+		if (type(scanPrice) == "number") then
+			Atr_AppendHint (results, scanPrice, ZT("Auctionator scan data"));
+		end
 	end
 
 	-- most recent historical price
@@ -228,7 +231,10 @@ function Atr_GetAuctionPrice (item)  -- itemName or itemID
 	end
 
 	if (gAtr_ScanDB and gAtr_ScanDB[itemName]) then
-		return gAtr_ScanDB[itemName];
+		local price = gAtr_ScanDB[itemName];
+		if (type(price) == "number") then
+			return price;
+		end
 	end
 	
 	return Atr_GetMostRecentSale (itemName);
@@ -762,7 +768,7 @@ function Atr_CalcDisenchantPrice (itemType, itemRarity, itemLevel)
 				local x;
 				for x = 3,#ta,3 do
 					local price = Atr_GetAuctionPriceDE (ta[x+2]);
-					if (price) then
+					if (price and type(price) == "number") then
 						dePrice = dePrice + (ta[x] * ta[x+1] * price);
 					end
 				end
