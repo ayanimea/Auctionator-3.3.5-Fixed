@@ -67,7 +67,8 @@ DEFAULT_CHAT_FRAME = {
 }
 
 -- ── WoW time / memory stubs ──────────────────────────────────────────────────
--- time() is standard Lua, no stub needed.
+-- WoW provides a global time(); in plain Lua 5.1 it is os.time().
+time = os.time
 -- These are used only in tested functions that require WoW addon system:
 function UpdateAddOnMemoryUsage() end
 function GetAddOnMemoryUsage() return 0 end

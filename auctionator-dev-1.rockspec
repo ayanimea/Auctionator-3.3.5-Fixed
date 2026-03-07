@@ -18,6 +18,7 @@ dependencies = {
     "lua >= 5.1",
     "busted >= 2.0",
     "luacheck >= 1.0",
+    "luabitop >= 1.0",
 }
 
 build = {
