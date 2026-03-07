@@ -32,12 +32,21 @@ if not bit then
 end
 
 -- ── WoW string helpers ────────────────────────────────────────────────────────
--- strsplit: split string by one or more delimiter characters, WoW-style
+-- strsplit: split string by delimiter string, WoW-style (preserve empty fields)
 function strsplit(delim, str)
     local result = {}
-    local pattern = "([^" .. delim .. "]*)" .. delim .. "?"
-    for match in str:gmatch("[^" .. delim .. "]+") do
-        table.insert(result, match)
+    local pos = 1
+    -- Use plain string matching so delimiters are treated literally and can be multi-character.
+    while true do
+        local start_pos, end_pos = string.find(str, delim, pos, true)
+        if not start_pos then
+            -- No more delimiters; add the remainder (possibly empty)
+            table.insert(result, string.sub(str, pos))
+            break
+        end
+        -- Add the segment before the delimiter (possibly empty)
+        table.insert(result, string.sub(str, pos, start_pos - 1))
+        pos = end_pos + 1
     end
     -- return multiple values like WoW's strsplit
     return unpack(result)

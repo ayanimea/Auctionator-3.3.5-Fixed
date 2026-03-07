@@ -66,12 +66,23 @@ end)
 
 describe("AtrQuery:CheckForDuplicatePage", function()
     local query
+    local originalGetNumAuctionItems
 
     before_each(function()
+        -- Save the original GetNumAuctionItems so we can restore it after each spec.
+        originalGetNumAuctionItems = GetNumAuctionItems
         -- Override GetNumAuctionItems so CheckForDuplicatePage gets 0 items
         -- (the code path that never sets prevPage data returns false).
         GetNumAuctionItems = function() return 0, 0 end
         query = Atr_NewQuery()
+    end)
+
+    after_each(function()
+        -- Restore the original GetNumAuctionItems to avoid leaking state.
+        if originalGetNumAuctionItems ~= nil then
+            GetNumAuctionItems = originalGetNumAuctionItems
+            originalGetNumAuctionItems = nil
+        end
     end)
 
     it("returns false when there are no auction items", function()
