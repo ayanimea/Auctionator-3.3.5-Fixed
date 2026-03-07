@@ -1019,13 +1019,9 @@ local gNumAdded, gNumUpdated;
 
 function Atr_FullScanStart()
 
-	local gAtr_FullScanIsSlowScan = false;
---	local gAtr_FullScanIsSlowScan = Atr_FullScan_Slow:GetChecked();
---	zc.md (gAtr_FullScanIsSlowScan);
-
 	local _, canQueryAll = CanSendAuctionQuery();
 
-	if (canQueryAll or gAtr_FullScanIsSlowScan) then
+	if (canQueryAll) then
 
 		Atr_FullScanStatus:SetText (ZT("Scanning").."...");
 		Atr_FullScanStartButton:Disable();
