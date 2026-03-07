@@ -266,45 +266,6 @@ end
 
 -----------------------------------------
 
-local function Atr_CalcTextWid (price)
-
-	local wid = 15;
-
-	if (price > 9)			then wid = wid + 12;	end;
-	if (price > 99)			then wid = wid + 44;	end;
-	if (price > 999)		then wid = wid + 12;	end;
-	if (price > 9999)		then wid = wid + 44;	end;
-	if (price > 99999)		then wid = wid + 12;	end;
-	if (price > 999999)		then wid = wid + 12;	end;
-	if (price > 9999999)	then wid = wid + 12;	end;
-	if (price > 99999999)	then wid = wid + 12;	end;
-
-	return wid;
-end
-
------------------------------------------
-
-local function Atr_CalcTTpadding (price1, price2)
-
-	local padding = "";
-
-	if (price1 and price2) then
-		local vpwidth = Atr_CalcTextWid (price1);
-		local apwidth = Atr_CalcTextWid (price2);
-
-		local padlen = math.floor ((apwidth - vpwidth)/6);
-
-		for k = 1,padlen do
-			padding = padding.." ";
-		end
-	end
-
-	return padding;
-
-end
-
------------------------------------------
-
 local UNCOMMON	= 2;
 local RARE		= 3;
 local EPIC		= 4;

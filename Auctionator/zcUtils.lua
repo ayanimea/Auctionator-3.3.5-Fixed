@@ -377,7 +377,7 @@ function zc.PrintTable (t, indent)
 	end
 
 	local padding = "";
-	for x = 1,indent do
+	for _ = 1,indent do
 		padding = padding.."  ";
 	end
 

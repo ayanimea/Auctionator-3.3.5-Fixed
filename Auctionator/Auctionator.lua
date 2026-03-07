@@ -511,7 +511,7 @@ end
 
 local function Atr_SlashCmdFunction(msg)
 
-	local cmd, param1u, param2u, param3u = zc.words (msg);
+	local cmd, param1u, param2u = zc.words (msg);
 
 	if (cmd == nil or type (cmd) ~= "string") then
 		return;
@@ -847,7 +847,7 @@ function Atr_GetSellItemInfo ()
 
 	if (auctionItemName ~= "") then
 		AtrScanningTooltip:SetAuctionSellItem();
-		local _, auctionItemLink = AtrScanningTooltip:GetItem();
+		auctionItemLink = select(2, AtrScanningTooltip:GetItem());
 
 		if (auctionItemLink == nil) then
 			return "",0,nil;
@@ -1781,7 +1781,7 @@ function AuctionatorSubtractFromScan (itemName, stackSize, buyoutPrice, howMany)
 
 	local scan = Atr_FindScan (itemName);
 
-	for x = 1, howMany do
+	for _ = 1, howMany do
 		scan:SubtractScanItem (itemName, stackSize, buyoutPrice);
 	end
 
@@ -4177,14 +4177,12 @@ end
 
 -----------------------------------------
 
-local gInitial_NumStacks;
 local gInitial_StackSize;
 
 -----------------------------------------
 
 function Atr_SetInitialStacking (numStacks, stackSize)
 
-	gInitial_NumStacks = numStacks;
 	gInitial_StackSize = stackSize;
 
 	Atr_Batch_NumAuctions:SetText (numStacks);

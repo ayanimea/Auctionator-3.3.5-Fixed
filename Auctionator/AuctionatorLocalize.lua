@@ -56,7 +56,6 @@ end
 
 -----------------------------------------
 
-local _testt = {};
 local Atr_excludes = { Cancel=1, Okay=1, Done=1, Close=1 }
 
 -----------------------------------------
@@ -71,7 +70,6 @@ local function Atr_LocalizeChildText (frame)
 			local fname = tostring(child:GetName());
 
 			if (ftext and ftext ~= "" and not Atr_excludes[ftext] and not zc.StringStartsWith (fname, "AuctionatorEntry")) then
-				_testt[ftext] = 1;
 				child:SetText (ZT(ftext));
 			end
 		end
@@ -85,7 +83,6 @@ local function Atr_LocalizeChildText (frame)
 			local fname = tostring(child:GetName());
 
 			if (ftext and ftext ~= "" and not Atr_excludes[ftext] and not zc.StringStartsWith (fname, "AuctionatorEntry")) then
-				_testt[ftext] = 1;
 
 				if (child:GetObjectType() == "Button") then
 					local oldwid = math.floor(child:GetWidth());

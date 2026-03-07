@@ -160,11 +160,6 @@ end
 
 function Atr_Buy_Idle ()
 
-	local _elapsed = -1;
-	if (gAtr_Buy_Waiting_Start) then
-		_elapsed = time() - gAtr_Buy_Waiting_Start;
-	end
-
 --	Atr_Buy_Debug1 ("elapsed", elapsed, "   pass: ", gAtr_Buy_Pass);
 
 	if (gBuyState == ATR_BUY_WAITING_FOR_AH_CAN_SEND) then
