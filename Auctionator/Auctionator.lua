@@ -1610,7 +1610,8 @@ end
 
 ------------------------------------------
 
--- Restores the sell tab to the inventory browser view after an auction operation completes.
+-- Restores the sell tab to the inventory browser view after starting an auction
+-- and when multisell operations complete or fail.
 local function Atr_RestoreSellBrowserUI()
 	if (Atr_SellBrowser) then
 		gSB_Visible = true;
