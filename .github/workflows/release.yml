@@ -17,7 +17,7 @@ jobs:
       - name: Read addon version from .toc
         id: version
         run: |
-          VERSION=$(awk '/^## Version:/ {print $3; exit}' Auctionator/Auctionator.toc)
+          VERSION=$(awk '/^## Version:/ {print $3; exit}' Auctionator/Auctionator.toc | tr -d '\r')
           if [ -z "${VERSION}" ]; then
             echo "Error: Failed to parse addon version from Auctionator/Auctionator.toc" >&2
             exit 1
