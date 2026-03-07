@@ -68,7 +68,11 @@ function collectgarbage(opt, ...)
     if opt == "count" then
         return 0
     end
-    -- Delegate all other options (including nil) to the original implementation
+    if opt == nil then
+        -- Match Lua 5.1 semantics: collectgarbage() with no args is valid
+        return _original_collectgarbage()
+    end
+    -- Delegate all other options to the original implementation
     return _original_collectgarbage(opt, ...)
 end
 
