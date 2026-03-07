@@ -520,5 +520,7 @@ globals = {
 }
 
 ignore = {
+    "211",  -- unused variable (common in WoW API callbacks / multi-return patterns)
+    "421",  -- shadowing a local variable (common in nested loops / closures)
     "542",  -- empty if-branch (sometimes intentional in event handlers)
 }
