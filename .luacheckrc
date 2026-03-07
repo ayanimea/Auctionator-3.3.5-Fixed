@@ -50,6 +50,8 @@ globals = {
     "UnitName", "GetRealmName",
     "time", "date", "format", "gsub", "strsplit", "strjoin",
     "bit",
+    "debugstack",
+    "UpdateAddOnMemoryUsage", "GetAddOnMemoryUsage",
 
     -- Auctionator globals defined across multiple files
     "Auctionator", "AuctionatorVersion", "AuctionatorAuthor",
@@ -80,6 +82,7 @@ globals = {
     "ATR_SK_GLYPHS", "ATR_SK_HERBS", "ATR_SK_ITEM_ENH", "ATR_SK_POT_ELIX",
     "ATR_tipsAuctionOpt_CB", "ATR_tipsDisenchantOpt_CB", "ATR_tipsVendorOpt_CB",
     "AtrBuildLTable_enUS", "AtrBuildLTable_esES", "AtrBuildLTable_ruRU",
+    "AtrBuildLTable_deDE",
     "AtrL", "AtrPane", "AtrScan", "AtrScanningTooltip", "AtrSearch",
     "Atr_ASDD_Class", "Atr_ASDD_Class_Initialize", "Atr_ASDD_Class_OnClick",
     "Atr_ASDD_Class_OnLoad", "Atr_ASDD_Subclass", "Atr_ASDD_Subclass_Initialize",

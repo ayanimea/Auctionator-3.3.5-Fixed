@@ -604,6 +604,7 @@ function zc.msg_ex (options, ...)
 	local msg = "";
 
 	local i;
+	local m;
 	local num = select("#", ...);
 
 	for i = 1, num do

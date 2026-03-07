@@ -209,8 +209,8 @@ AtrL["Starting Price"] = "Prix de d\195\169part"
 AtrL["Stop Checking"] = "Annuler la v\195\169rification"
 AtrL["Swedish translation courtesy of %s"] = "Traduction su\195\169doise r\195\169alis\195\169e amicalement par %s"
 AtrL["Uncommon"] = "Non commun"
-AtrL["You do not have enough gold\n\nto make any more purchases."] = "Vous n'avez pas assez d'argent\n\pour r\195\169aliser un autre achat."
-AtrL["You may have at most 40 single-stack (x1)\nauctions posted for this item.\n\nYou already have %d such auctions and\nyou are trying to post %d more."] = "Vous avez d\195\169j\195\160 40 lots uniques (x1) \n d'ench\195\168res pour cet article. \n\ Vous avez \195\169galement %d ench\195\168res en cours et\n vous essayer d'en poster %d de plus."
+AtrL["You do not have enough gold\n\nto make any more purchases."] = "Vous n'avez pas assez d'argent\npour r\195\169aliser un autre achat."
+AtrL["You may have at most 40 single-stack (x1)\nauctions posted for this item.\n\nYou already have %d such auctions and\nyou are trying to post %d more."] = "Vous avez d\195\169j\195\160 40 lots uniques (x1) \n d'ench\195\168res pour cet article. \n Vous avez \195\169galement %d ench\195\168res en cours et\n vous essayer d'en poster %d de plus."
 
 --   Untranslated
 
