@@ -12,7 +12,6 @@ source = {
 description = {
     summary  = "Auctionator WoW 3.3.5 addon – dev/test dependencies",
     homepage = "https://github.com/ayanimea/Auctionator-3.3.5-Fixed",
-    license  = "All Rights Reserved",
 }
 
 dependencies = {
