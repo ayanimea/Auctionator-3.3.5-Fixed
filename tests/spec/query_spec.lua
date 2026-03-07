@@ -27,7 +27,7 @@ describe("AtrQuery:BuildItemIDstr", function()
         query = Atr_NewQuery()
     end)
 
-    it("builds a pipe-delimited ID string when all fields are provided", function()
+    it("builds an underscore-delimited ID string when all fields are provided", function()
         local result = query:BuildItemIDstr("Sword", 1, 100, 500, 0)
         assert.equal("Sword_1_100_500_0", result)
     end)

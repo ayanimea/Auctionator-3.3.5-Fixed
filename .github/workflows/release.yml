@@ -17,7 +17,11 @@ jobs:
       - name: Read addon version from .toc
         id: version
         run: |
-          VERSION=$(grep -oP '(?<=## Version: )\S+' Auctionator/Auctionator.toc)
+          VERSION=$(awk '/^## Version:/ {print $3; exit}' Auctionator/Auctionator.toc)
+          if [ -z "${VERSION}" ]; then
+            echo "Error: Failed to parse addon version from Auctionator/Auctionator.toc" >&2
+            exit 1
+          fi
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Lua 5.1

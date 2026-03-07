@@ -37,7 +37,7 @@ function ZT (s)
 
 	if (AtrL) then
 		local s1 = AtrL[s];
-		if (s1 and s1 ~= "" and not zc.StringStartsWith ("XXXXX")) then
+		if (s1 and s1 ~= "" and not zc.StringStartsWith (s1, "XXXXX")) then
 			return s1;
 		end
 	end

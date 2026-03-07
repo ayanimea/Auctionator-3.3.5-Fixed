@@ -5,7 +5,9 @@
 -- ── bit library (WoW ships BitOp; provide a pure-Lua shim for Lua 5.1) ──────
 if not bit then
     local ok, bitlib = pcall(require, "bit")
-    if not ok then
+    if ok then
+        bit = bitlib
+    else
         -- Minimal pure-Lua bit operations needed by zcUtils
         local M = {}
         function M.band(a, b)
@@ -61,8 +63,13 @@ DEFAULT_CHAT_FRAME = {
 function UpdateAddOnMemoryUsage() end
 function GetAddOnMemoryUsage() return 0 end
 function debugstack(level) return "" end
-function collectgarbage(opt)
-    if opt == "count" then return 0 end
+local _original_collectgarbage = collectgarbage
+function collectgarbage(opt, ...)
+    if opt == "count" then
+        return 0
+    end
+    -- Delegate all other options (including nil) to the original implementation
+    return _original_collectgarbage(opt, ...)
 end
 
 -- ── WoW item API stubs ────────────────────────────────────────────────────────
