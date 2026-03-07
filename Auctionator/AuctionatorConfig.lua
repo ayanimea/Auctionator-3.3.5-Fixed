@@ -1,5 +1,5 @@
 
-local addonName, addonTable = ...;
+local _, addonTable = ...;
 local zc = addonTable.zc;
 
 -----------------------------------------
@@ -343,7 +343,7 @@ kStackList_categories[ATR_SK_HERBS]			= { txt=ZT("Herbs")	}
 function Atr_SetupStackingFrame ()
 
 	if (_G["Atr_StackList1"] == nil) then
-		local line, n;
+		local line;
 
 		for n = 1, kStackList_LinesToDisplay do
 			local y = -5 - ((n-1)*16);
@@ -363,11 +363,9 @@ function Atr_StackingList_Display()
 	gStackList_plist = {};
 
 	local plist = gStackList_plist;
-	local text, spinfo;
-	local sortkey, info;
 	local n = 1;
 
-	for sortkey, info in pairs (kStackList_categories) do
+	for _, info in pairs (kStackList_categories) do
 		info.overrideFound = false;
 	end
 
@@ -404,7 +402,6 @@ function Atr_StackingList_Display()
 
 	local totalRows = #plist;
 
-	local line;							-- 1 through NN of our window to scroll
 	local dataOffset;					-- an index into our data calculated from the scroll offset
 
 	FauxScrollFrame_Update (Atr_Stacking_ScrollFrame, totalRows, kStackList_LinesToDisplay, 16);

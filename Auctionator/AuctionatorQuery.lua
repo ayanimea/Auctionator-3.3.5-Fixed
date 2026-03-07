@@ -42,7 +42,6 @@ function AtrQuery:CheckForDuplicatePage (pagenum)
 		return false;
 	end
 
-	local x;
 	local prevPage			= self.prevPage;
 	local dupPageFound		= true;
 	local numDupItems		= 0;
@@ -50,7 +49,7 @@ function AtrQuery:CheckForDuplicatePage (pagenum)
 
 	for x = 1, numBatchAuctions do
 
-		local name, texture, count, quality, canUse, level, minBid, minIncrement, buyoutPrice, bidAmount, highBidder, owner = GetAuctionItemInfo("list", x);
+		local name, _, count, _, _, _, minBid, _, buyoutPrice, bidAmount, _, _ = GetAuctionItemInfo("list", x);
 
 		thisPage.items[x] = self:BuildItemIDstr (name, count, minBid, buyoutPrice, bidAmount);
 
@@ -78,9 +77,6 @@ function AtrQuery:CheckForDuplicatePage (pagenum)
 --		zc.msg_red ("Dup page found but all items identical: thisPage.numOnPage: ", thisPage.numOnPage);
 		dupPageFound = false;
 
-	elseif (not dupPageFound) then
-
---		zc.msg_pink ("page is unique");
 	end
 
 
@@ -98,7 +94,7 @@ end
 
 -----------------------------------------
 
-function AtrQuery:IsLastPage (pagenum)
+function AtrQuery.IsLastPage (_, pagenum)
 
 	local _, totalAuctions = GetNumAuctionItems("list");
 
@@ -107,7 +103,7 @@ end
 
 -----------------------------------------
 
-function AtrQuery:BuildItemIDstr(name, count, minBid, buyoutPrice, bidAmount)
+function AtrQuery.BuildItemIDstr(_, name, count, minBid, buyoutPrice, bidAmount)
 
 	if (name) then
 		return name.."_"..count.."_"..minBid.."_"..buyoutPrice.."_"..bidAmount;

@@ -1,5 +1,5 @@
 
-local addonName, addonTable = ...;
+local _, addonTable = ...;
 local zc = addonTable.zc;
 
 

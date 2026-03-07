@@ -1,5 +1,5 @@
 
-local addonName, addonTable = ...;
+local _, addonTable = ...;
 local zc = addonTable.zc;
 
 
@@ -56,14 +56,13 @@ end
 
 -----------------------------------------
 
-local testt = {};
+local _testt = {};
 local Atr_excludes = { Cancel=1, Okay=1, Done=1, Close=1 }
 
 -----------------------------------------
 
 local function Atr_LocalizeChildText (frame)
 
-	local child;
 	local subregions = { frame:GetRegions() };
 	for _, child in ipairs(subregions) do
 
@@ -72,7 +71,7 @@ local function Atr_LocalizeChildText (frame)
 			local fname = tostring(child:GetName());
 
 			if (ftext and ftext ~= "" and not Atr_excludes[ftext] and not zc.StringStartsWith (fname, "AuctionatorEntry")) then
-				testt[ftext] = 1;
+				_testt[ftext] = 1;
 				child:SetText (ZT(ftext));
 			end
 		end
@@ -86,7 +85,7 @@ local function Atr_LocalizeChildText (frame)
 			local fname = tostring(child:GetName());
 
 			if (ftext and ftext ~= "" and not Atr_excludes[ftext] and not zc.StringStartsWith (fname, "AuctionatorEntry")) then
-				testt[ftext] = 1;
+				_testt[ftext] = 1;
 
 				if (child:GetObjectType() == "Button") then
 					local oldwid = math.floor(child:GetWidth());
@@ -265,7 +264,6 @@ function Atr_ItemType2AuctionClass(itemType)
 	local itemClasses = Atr_GetAuctionClasses();
 
 	if #itemClasses > 0 then
-	local itemClass;
 		for x, itemClass in pairs(itemClasses) do
 			if (zc.StringSame (itemClass, itemType)) then
 				return x;
@@ -284,7 +282,6 @@ function Atr_SubType2AuctionSubclass(auctionClass, itemSubtype)
 	local subclasses = Atr_GetAuctionSubclasses (auctionClass);
 
 	if #subclasses > 0 then
-	local itemSubClass;
 		for x, itemSubClass in pairs(subclasses) do
 			if (zc.StringSame (itemSubClass, itemSubtype)) then
 				return x;
