@@ -1,5 +1,5 @@
 
-local addonName, addonTable = ...;
+local _, addonTable = ...;
 local zc = addonTable.zc;
 
 
@@ -99,9 +99,9 @@ function Atr_BuildHints (itemName)
 			local index = GoingPrice_Wowhead_SV._index["Buyout price"];
 
 			if (index ~= nil) then
-				local price = GoingPrice_Wowhead_Data[id][index];
+				local gpPrice = GoingPrice_Wowhead_Data[id][index];
 
-				Atr_AppendHint (results, price, "GoingPrice - Wowhead");
+				Atr_AppendHint (results, gpPrice, "GoingPrice - Wowhead");
 			end
 		end
 
@@ -111,9 +111,9 @@ function Atr_BuildHints (itemName)
 			local index = GoingPrice_Allakhazam_SV._index["Median"];
 
 			if (index ~= nil) then
-				local price = GoingPrice_Allakhazam_Data[id][index];
+				local gpPrice = GoingPrice_Allakhazam_Data[id][index];
 
-				Atr_AppendHint (results, price, "GoingPrice - Allakhazam");
+				Atr_AppendHint (results, gpPrice, "GoingPrice - Allakhazam");
 			end
 		end
 	end
@@ -143,7 +143,6 @@ function Atr_ShowHints ()
 		Atr_Col3_Heading:Show();
 	end
 
-	local line;							-- 1 through 12 of our window to scroll
 	local dataOffset;					-- an index into our data calculated from the scroll offset
 
 	FauxScrollFrame_Update (AuctionatorScrollFrame, numrows, 12, 16);
@@ -257,7 +256,7 @@ function Atr_GetMeanPrice (item)  -- itemName or itemID
 	end
 
 	if (gAtr_MeanDB and gAtr_MeanDB[itemName] and #gAtr_MeanDB[itemName] > 0) then
-        local median = nil
+        local median
         if #gAtr_MeanDB[itemName] %2 == 0 then median = (gAtr_MeanDB[itemName][#gAtr_MeanDB[itemName]/2] + gAtr_MeanDB[itemName][#gAtr_MeanDB[itemName]/2+1]) / 2 else median = gAtr_MeanDB[itemName][math.ceil(#gAtr_MeanDB[itemName]/2)] end
         return math.floor(median)
 	end
@@ -294,7 +293,6 @@ local function Atr_CalcTTpadding (price1, price2)
 		local apwidth = Atr_CalcTextWid (price2);
 
 		local padlen = math.floor ((apwidth - vpwidth)/6);
-		local k;
 
 		for k = 1,padlen do
 			padding = padding.." ";
@@ -485,7 +483,7 @@ function Atr_GetNextDustIntoCache()		-- make sure all the dusts and essences are
 	if (itemLink == nil and dustCacheState == DUST_CACHE_READY_FOR_NEXT) then
 		dustCacheState = DUST_CACHE_WAITING_ON_PREV;
 		AtrScanningTooltip:SetHyperlink(itemString);
-		local _, link = GetItemInfo(itemString);
+		GetItemInfo(itemString);
 --		zc.md ("pulling "..itemString.." into the local cache   ", itemLink, link, dustCacheState);
 	end
 
@@ -561,7 +559,7 @@ local function DEtableInsert(t, info)
 
 	local entry = {};
 
-	local x, i, n;
+	local n;
 
 	entry[1]	= info[1];
 	entry[2]	= info[2];
@@ -624,7 +622,7 @@ function Atr_InitDETable()		-- based on table at wowwiki.com/Disenchanting_table
 
 	deTable[deKey(WEAPON, UNCOMMON)] = {};
 
-	local t = deTable[deKey(WEAPON, UNCOMMON)];
+	t = deTable[deKey(WEAPON, UNCOMMON)];
 
 	DEtableInsert (t, {6, 15,		20, {1,2}, STRANGE_DUST,	80, {1,2}, LESSER_MAGIC});
 	DEtableInsert (t, {16, 20,		20, {2,3}, STRANGE_DUST,	75, {1,2}, GREATER_MAGIC,	5, 1, SMALL_GLIMMERING});
@@ -696,7 +694,6 @@ local function Atr_FindDEentry (itemType, itemRarity, itemLevel)
 	local t = deTable[deKey(itemTypeNum, itemRarity)];
 
 	if (t) then
-		local n;
 		for n = 1, #t do
 
 			local ta = t[n];
@@ -717,7 +714,6 @@ local function Atr_AddDEDetailsToTip (tip, itemType, itemRarity, itemLevel, DEre
 	local ta = Atr_FindDEentry (itemType, itemRarity, itemLevel);
 
 	if (ta) then
-		local x;
 		for x = 3,#ta,3 do
 			local percent = math.floor (ta[x]*100) / 100;
 
@@ -740,7 +736,6 @@ function Atr_DumpDETable (itemType, itemRarity)
 	local t = deTable[deKey(itemType, itemRarity)];
 
 	if (t) then
-		local n, x;
 		for n = 1, #t do
 			local ta = t[n];
 
@@ -765,7 +760,6 @@ function Atr_CalcDisenchantPrice (itemType, itemRarity, itemLevel)
 
 			local ta = Atr_FindDEentry (itemType, itemRarity, itemLevel);
 			if (ta) then
-				local x;
 				for x = 3,#ta,3 do
 					local price = Atr_GetAuctionPriceDE (ta[x+2]);
 					if (price and type(price) == "number") then
@@ -805,7 +799,7 @@ local function ShowTipWithPricing (tip, link, num)
 	end
 ]]--
 
-	local itemName, itemLink, itemRarity, itemLevel, itemMinLevel, itemType, _, _, _, _, itemVendorPrice = GetItemInfo (link);
+	local itemName, _, itemRarity, itemLevel, _, itemType, _, _, _, _, itemVendorPrice = GetItemInfo (link);
 
 	local itemID = zc.ItemIDfromLink (link);
 	itemID = tonumber(itemID);
@@ -842,7 +836,6 @@ local function ShowTipWithPricing (tip, link, num)
 	-- vendor info
 
 	if (AUCTIONATOR_V_TIPS == 1 and vendorPrice > 0) then
-		local vpadding = Atr_CalcTTpadding (vendorPrice, auctionPrice);
 		tip:AddDoubleLine (ZT("Vendor")..xstring, "|cFFFFFFFF"..zc.priceToMoneyString (vendorPrice))
 	end
 
@@ -913,8 +906,8 @@ hooksecurefunc (GameTooltip, "SetAuctionItem",
 hooksecurefunc (GameTooltip, "SetAuctionSellItem",
 	function (tip)
 		local name, _, count = GetAuctionSellItemInfo();
-		local __, link = GetItemInfo(name);
-		ShowTipWithPricing (tip, link, num);
+		local _, link = GetItemInfo(name);
+		ShowTipWithPricing (tip, link, count);
 	end
 );
 
@@ -1014,21 +1007,21 @@ hooksecurefunc (GameTooltip, "SetInboxItem",
 hooksecurefunc (GameTooltip, "SetSendMailItem",
 	function (tip, id)
 		local name, _, num = GetSendMailItem(id)
-		local name, link = GetItemInfo(name);
+		local _, link = GetItemInfo(name);
 		ShowTipWithPricing (tip, link, num);
 	end
 );
 
 hooksecurefunc (GameTooltip, "SetHyperlink",
 	function (tip, itemstring, num)
-		local name, link = GetItemInfo (itemstring);
+		local _, link = GetItemInfo (itemstring);
 		ShowTipWithPricing (tip, link, num);
 	end
 );
 
 hooksecurefunc (ItemRefTooltip, "SetHyperlink",
 	function (tip, itemstring)
-		local name, link = GetItemInfo (itemstring);
+		local _, link = GetItemInfo (itemstring);
 		ShowTipWithPricing (tip, link);
 	end
 );

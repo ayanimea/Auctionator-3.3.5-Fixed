@@ -1,5 +1,5 @@
 
-local addonName, addonTable = ...;
+local _, addonTable = ...;
 local zc = addonTable.zc;
 
 -----------------------------------------
@@ -16,7 +16,6 @@ local gCurrentSList;
 function Atr_ShoppingListsInit ()
 
 	local num = #AUCTIONATOR_SHOPPING_LISTS;
-	local x;
 
 	for x = 1,num do
 		setmetatable (AUCTIONATOR_SHOPPING_LISTS[x], Atr_SList);
@@ -85,7 +84,6 @@ end
 function Atr_SList:RemoveItem (itemName)
 
 	local num = #self.items;
-	local n;
 
 	for n = 1,num do
 		if (zc.StringSame (self.items[n], itemName)) then
@@ -130,7 +128,6 @@ function Atr_SList:DisplayX ()
 
 	local numrows = #self.items;
 
-	local line;							-- 1 through NN of our window to scroll
 	local dataOffset;					-- an index into our data calculated from the scroll offset
 
 	FauxScrollFrame_Update (Atr_Hlist_ScrollFrame, numrows, SLITEMS_NUM_LINES, 16);
@@ -176,7 +173,6 @@ end
 function Atr_SList:FindItemIndex (itemName)
 
 	local num = #self.items;
-	local n;
 
 	for n = 1,num do
 		if (zc.StringSame (itemName, self.items[n])) then
@@ -291,7 +287,6 @@ function Atr_DropDownSL_Initialize(self)
 	local info = UIDropDownMenu_CreateInfo();
 
 	local num = #AUCTIONATOR_SHOPPING_LISTS;
-	local x;
 
 	for x = 1,num do
 
@@ -352,7 +347,6 @@ local function FinishCreateNewSList(text)
 	local slist = Atr_SList.create(text);
 
 	local num = #AUCTIONATOR_SHOPPING_LISTS;
-	local n;
 
 	for n = 1,num do
 		if (AUCTIONATOR_SHOPPING_LISTS[n] == slist) then
@@ -400,8 +394,7 @@ StaticPopupDialogs["ATR_DEL_SHOPPING_LIST"] = {
 	text = "",
 	button1 = YES,
 	button2 = NO,
-	OnAccept = function(self)
-		local x;
+	OnAccept = function(_)
 		for x = 1,#AUCTIONATOR_SHOPPING_LISTS do
 			if (AUCTIONATOR_SHOPPING_LISTS[x] == gCurrentSList) then
 				table.remove (AUCTIONATOR_SHOPPING_LISTS, x);
@@ -448,8 +441,6 @@ end
 
 function Atr_AddToSListOnClick ()
 
-	local currentPane = Atr_GetCurrentPane();
-
 	if (gCurrentSList) then
 		if (#gCurrentSList.items >= 50) then
 			Atr_Error_Text:SetText (string.format (ZT("You may have no more than\n\n%d items on a shopping list."), 50));
@@ -466,8 +457,6 @@ end
 -----------------------------------------
 
 function Atr_RemFromSListOnClick ()
-
-	local currentPane = Atr_GetCurrentPane();
 
 	if (gCurrentSList) then
 		gCurrentSList:RemoveItem (Atr_Search_Box:GetText());
@@ -564,12 +553,10 @@ end
 function Atr_ASDD_Class_Initialize (self)
 
 	local itemClasses = Atr_GetAuctionClasses();
-	local n;
 
 	Atr_Dropdown_AddPick (Atr_ASDD_Subclass, "-------", 0);
 
 	if (#itemClasses > 0) then
-		local text;
 		for n, text in pairs(itemClasses) do
 			Atr_Dropdown_AddPick (self, text, n, Atr_ASDD_Class_OnClick);
 		end
@@ -611,7 +598,7 @@ end
 
 -----------------------------------------
 
-function Atr_ASDD_Subclass_Initialize (self)
+function Atr_ASDD_Subclass_Initialize (_)
 
 	local itemClass = UIDropDownMenu_GetSelectedValue (Atr_ASDD_Class);
 
@@ -620,10 +607,8 @@ function Atr_ASDD_Subclass_Initialize (self)
 	if (itemClass) then
 
 		local itemSubclasses = Atr_GetAuctionSubclasses(itemClass);
-		local n;
 
 		if (#itemSubclasses > 0) then
-			local text;
 			for n, text in pairs(itemSubclasses) do
 
 				Atr_Dropdown_AddPick (Atr_ASDD_Subclass, text, n);
