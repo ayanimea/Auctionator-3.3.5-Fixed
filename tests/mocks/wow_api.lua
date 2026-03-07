@@ -78,9 +78,10 @@ end
 
 -- ── WoW item API stubs ────────────────────────────────────────────────────────
 function GetItemInfo(item)
-    -- Return a minimal fake item for testing
+    -- Return a minimal fake item for testing (matches real WoW GetItemInfo signature)
+    -- name, link, quality, iLevel, reqLevel, type, subType, stackCount, equipLoc, icon, vendorPrice
     return "TestItem", "|cffffffff|Hitem:1234:0:0:0:0:0:0:0:0|h[TestItem]|h|r",
-           4, 60, true, "Weapon", "Swords", 1, "", 0, 100
+           4, 60, 1, "Weapon", "Swords", 1, "", "Interface\\Icons\\INV_Sword_04", 100
 end
 
 function GetNumAuctionItems(listType)

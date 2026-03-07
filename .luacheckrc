@@ -520,7 +520,22 @@ globals = {
 }
 
 ignore = {
-    "211",  -- unused variable (common in WoW API callbacks / multi-return patterns)
-    "421",  -- shadowing a local variable (common in nested loops / closures)
-    "542",  -- empty if-branch (sometimes intentional in event handlers)
+    -- Unused variables / arguments (common in WoW API callbacks / multi-return patterns)
+    "211",  -- unused variable
+    "212",  -- unused argument
+    "213",  -- unused loop variable
+    "221",  -- variable is never set
+    "231",  -- variable is never accessed
+    "241",  -- variable is mutated but never accessed
+    -- Dead assignments (common in old WoW addon code)
+    "311",  -- value assigned to variable is unused
+    -- Variable redefinition / shadowing (common in nested loops / closures)
+    "411",  -- variable was previously defined
+    "413",  -- loop variable was previously defined
+    "421",  -- shadowing an upvalue
+    "431",  -- shadowing upvalue loop variable
+    -- Control flow (intentional "repeat...until true" blocks used as break-able scopes)
+    "512",  -- loop is executed at most once
+    -- Empty branches (sometimes intentional in event handlers)
+    "542",  -- empty if-branch
 }
