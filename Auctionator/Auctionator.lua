@@ -1610,6 +1610,20 @@ end
 
 ------------------------------------------
 
+-- Restores the sell tab to the inventory browser view after starting an auction
+-- and when multisell operations complete or fail.
+local function Atr_RestoreSellBrowserUI()
+	if (Atr_SellBrowser) then
+		gSB_Visible = true;
+		Atr_SellBrowser:Show();
+		if (Atr_SB_Build) then Atr_SB_Build(); end
+	end
+	if (Atr_SellControls) then Atr_SellControls:Hide(); end
+	if (Atr_SellBrowser_Toggle) then Atr_SellBrowser_Toggle:SetText("Back"); end
+end
+
+------------------------------------------
+
 function Atr_CreateAuction_OnClick ()
 
 	gAtr_SellTriggeredByAuctionator = true;
@@ -1640,13 +1654,7 @@ function Atr_CreateAuction_OnClick ()
 	StartAuction (stackStartingPrice, stackBuyoutPrice, duration, gJustPosted_StackSize, gJustPosted_NumStacks);
 
 	-- After creating auction(s), return to the inventory browser section
-	if (Atr_SellBrowser) then
-		gSB_Visible = true;
-		Atr_SellBrowser:Show();
-		if (Atr_SB_Build) then Atr_SB_Build(); end
-	end
-	if (Atr_SellControls) then Atr_SellControls:Hide(); end
-	if (Atr_SellBrowser_Toggle) then Atr_SellBrowser_Toggle:SetText("Back"); end
+	Atr_RestoreSellBrowserUI();
 end
 
 
@@ -1684,6 +1692,7 @@ function Atr_OnAuctionMultiSellUpdate(...)
 		Atr_LogMsg (gJustPosted_ItemLink, gJustPosted_StackSize, gJustPosted_BuyoutPrice, stacksTotal);
 		Atr_AddHistoricalPrice (gJustPosted_ItemName, gJustPosted_BuyoutPrice / gJustPosted_StackSize, gJustPosted_StackSize, gJustPosted_ItemLink);
 		gAtr_SellTriggeredByAuctionator = false;     -- reset
+		Atr_RestoreSellBrowserUI();
 	end
 	
 end
@@ -1708,6 +1717,8 @@ function Atr_OnAuctionMultiSellFailure()
 	if (gCurrentPane.activeScan) then
 		gCurrentPane.activeScan.whenScanned = 0;
 	end
+
+	Atr_RestoreSellBrowserUI();
 end
 
 
