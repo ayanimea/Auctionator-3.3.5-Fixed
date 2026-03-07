@@ -4,7 +4,7 @@
 -- This module should contain no globals as it is intended to be "linked" in to each of Zirco's addons
 
 
-local addonName, addonTable = ...;
+local _, addonTable = ...;
 local zc = {};
 
 addonTable.zc = zc;
@@ -12,8 +12,6 @@ addonTable.zc = zc;
 -----------------------------------------
 
 function zc.RGBtoHEX (r,g,b)
-
-	local hex = "";
 
 	return string.format ("%02x%02x%02x", r * 255, g * 255, b * 255);
 
@@ -110,7 +108,7 @@ function zc.PrintKeysSorted (t)
 
 	local ta = {};
 
-	for a,v in pairs (t) do
+	for a,_ in pairs (t) do
 		table.insert (ta, a);
 	end
 
@@ -130,7 +128,7 @@ function zc.UTF8_Truncate (s, newlen)
 		return s;
 	end
 
-	local x, c;
+	local c;
 
 	for x = newlen, 1, -1 do
 
@@ -201,7 +199,6 @@ local function BuildDecTable()
 
 	if (decTable == nil) then
 		decTable = {};
-		local i;
 		for i = 1,64 do
 			decTable[encTable[i]] = i-1;
 		end
@@ -242,7 +239,6 @@ function zc.dec64 (s)
 
 	local result = 0;
 	local len = string.len (s);
-	local x;
 
 	for x = 1, len do
 		result = result * 64;
@@ -258,7 +254,6 @@ function ZF (s)
 	BuildDecTable();
 
 	local s2 = "";
-	local n;
 
 	for n = 1, s:len() do
 		local c = s:sub(n,n);
@@ -331,7 +326,6 @@ end
 function zc.CheckDeferredCall ()
 
 	local now = time();
-	local i;
 
 	for i = 1, #gDeferredCalls do
 		if (gDeferredCalls[i].when < now) then
@@ -371,12 +365,7 @@ end
 
 function zc.tableIsEmpty (t)
 
-	local n, v;
-	for n, v in pairs (t) do
-		return false;
-	end
-
-	return true;
+	return next(t) == nil;
 end
 
 -----------------------------------------
@@ -387,7 +376,6 @@ function zc.PrintTable (t, indent)
 		indent = 0;
 	end
 
-	local x
 	local padding = "";
 	for x = 1,indent do
 		padding = padding.."  ";
@@ -416,7 +404,7 @@ function zc.ItemIDfromLink (itemLink)
 		return 0,0,0;
 	end
 
-	local found, _, itemString = string.find(itemLink, "^|c%x+|H(.+)|h%[.*%]")
+	local _, _, itemString = string.find(itemLink, "^|c%x+|H(.+)|h%[.*%]")
 	local _, itemId, _, _, _, _, _, suffixId, uniqueId = strsplit(":", itemString)
 
 	return itemId, suffixId, uniqueId;
@@ -519,8 +507,6 @@ end
 
 function zc.HSV2RGB (h, s, v)
 
-	local r, g, b;
-
 	local hi = math.floor(h/60) % 6;
 	local f  = h/60 - math.floor(h/60);
 	local p  = v * (1-s);
@@ -603,7 +589,6 @@ function zc.msg_ex (options, ...)
 
 	local msg = "";
 
-	local i;
 	local m;
 	local num = select("#", ...);
 
@@ -747,7 +732,7 @@ function zc.StringContains (s, sub)
 		return false;
 	end
 
-	local start, stop = string.find (string.lower(s), string.lower(sub), 1, true);
+	local start, _ = string.find (string.lower(s), string.lower(sub), 1, true);
 
 	return (start ~= nil);
 end
@@ -853,8 +838,7 @@ function zc.printstack (options)
 
 	local x = 1;
 
-	local v;
-	for a,v in pairs(lines) do
+	for _,v in pairs(lines) do
 
 		local filename = nil;
 		local funcname = nil;
@@ -866,7 +850,7 @@ function zc.printstack (options)
 			filename = string.gsub (filename, "%.lua", "");
 		end
 
-		local a,b = string.find (v, "in function `.*\'");
+		a,b = string.find (v, "in function `.*\'");
 		if (a) then
 			funcname = string.sub (v,a+13,b-1);
 			table.insert (funcnames, funcname);
@@ -941,10 +925,10 @@ function zc.tallyPrint (ttable, options)
 	end
 
 
-	for n = 1, #sortedTable do
+	for idx = 1, #sortedTable do
 
-		if (not options.printCount or n < options.printCount) then
-			zc.msg_pink (sortedTable[n].count.."    "..sortedTable[n].value);
+		if (not options.printCount or idx < options.printCount) then
+			zc.msg_pink (sortedTable[idx].count.."    "..sortedTable[idx].value);
 		end
 	end
 
