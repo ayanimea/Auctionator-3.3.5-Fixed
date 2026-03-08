@@ -1,5 +1,5 @@
 
-local addonName, addonTable = ...;
+local _, addonTable = ...;
 local zc = addonTable.zc;
 
 
@@ -18,13 +18,11 @@ local gAtr_Buy_BuyoutPrice;
 local gAtr_Buy_ItemName;
 local gAtr_Buy_StackSize;
 local gAtr_Buy_NumBought;
-local gAtr_Buy_NumUserWants;
 local gAtr_Buy_MaxCanBuy;
 local gAtr_Buy_CurPage;
 local gAtr_Buy_Waiting_Start;
 local gAtr_Buy_Query;
 local gAtr_Buy_Pass;
-local gAtr_NextMatchIndex;
 local gAtr_Buy_MatchList = {};
 
 -----------------------------------------
@@ -83,7 +81,6 @@ function Atr_Buy1_Onclick ()
 	end
 
 	gAtr_Buy_Query			= Atr_NewQuery();
-	gAtr_Buy_NumUserWants	= -1;
 	gAtr_Buy_NumBought		= 0;
 
 	local currentPane = Atr_GetCurrentPane();
@@ -97,7 +94,6 @@ function Atr_Buy1_Onclick ()
 	gAtr_Buy_StackSize		= data.stackSize;
 	gAtr_Buy_MaxCanBuy		= data.count;
 	gAtr_Buy_Pass			= 1;		-- - first pass
-	gAtr_NextMatchIndex		= 0;
 
 	Atr_Buy_Confirm_ItemName:SetText (gAtr_Buy_ItemName.." |cCCCCCCCCx"..gAtr_Buy_StackSize);
 	Atr_Buy_Confirm_Numstacks:SetNumber (1);
@@ -147,8 +143,6 @@ end
 
 function Atr_Buy_SendQuery ()
 
-	gAtr_NextMatchIndex = 0;
-
 	if (CanSendAuctionQuery()) then
 
 		gBuyState = ATR_BUY_QUERY_SENT;
@@ -165,11 +159,6 @@ end
 -----------------------------------------
 
 function Atr_Buy_Idle ()
-
-	local elapsed = -1;
-	if (gAtr_Buy_Waiting_Start) then
-		elapsed = time() - gAtr_Buy_Waiting_Start;
-	end
 
 --	Atr_Buy_Debug1 ("elapsed", elapsed, "   pass: ", gAtr_Buy_Pass);
 
@@ -258,7 +247,6 @@ end
 
 function Atr_Buy_BuildMatchList ()
 
-	local i 		= 1;
 	local x			= 1;
 	local numInList = GetNumAuctionItems ("list");
 
@@ -278,10 +266,9 @@ end
 
 function Atr_Buy_BuyNextOnPage ()
 
-	local numMatches		= 0;
 	local numBoughtThisPage	= 0;
 	local i;
-	local x;
+
 
 	local numInMatchList = #gAtr_Buy_MatchList;
 

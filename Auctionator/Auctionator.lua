@@ -2,9 +2,8 @@
 AuctionatorVersion = "???";		-- set from toc upon loading
 AuctionatorAuthor  = "Zirco";
 
-local AuctionatorLoaded = false;
 local AuctionatorInited = false;
-local addonName, addonTable = ...;
+local _, addonTable = ...;
 local zc = addonTable.zc;
 
 gAtrZC = addonTable.zc;		-- share with AuctionatorDev
@@ -52,7 +51,7 @@ end
 
 -- Mouse wheel fallback: adjust row offset directly when Blizzard handler is missing
 if not _G.FauxScrollFrame_OnMouseWheel then
-  function FauxScrollFrame_OnMouseWheel(self, delta, lineHeight, updateFunc)
+  function FauxScrollFrame_OnMouseWheel(self, delta, _lineHeight, updateFunc)
     if not self then return end
     local rowsDelta = (delta and delta > 0) and -1 or 1
     local current = (FauxScrollFrame_GetOffset(self) or 0)
@@ -123,28 +122,22 @@ local auctionator_savedvars_defaults =
 -----------------------------------------
 
 local auctionator_orig_AuctionFrameTab_OnClick;
-local auctionator_orig_ContainerFrameItemButton_OnModifiedClick;
 local auctionator_orig_AuctionFrameAuctions_Update;
 local auctionator_orig_CanShowRightUIPanel;
 local auctionator_orig_ChatEdit_InsertLink;
 local auctionator_orig_ChatFrame_OnEvent;
 local auctionator_orig_FriendsFrame_OnEvent;
 
-local gForceMsgAreaUpdate = true;
 local gAtr_ClickAuctionSell = false;
 
   -- Suspend non-essential processing while loading screens are active or transitioning zones
   local gAtr_SuspendForLoading = false;
   local gAtr_SuspendUntilTime = 0;   -- time()-based grace period after zoning
-  local gAtr_PendingBagRebuild = false; -- request to rebuild SELL browser after suspension ends
   local gAtr_LastSBBuildAt = 0;         -- throttle SELL browser rebuilds
 
 local gOpenAllBags  	= AUCTIONATOR_OPEN_ALL_BAGS;
 local gTimeZero;
 local gTimeTightZero;
-
-local cslots = {};
-local gEmptyBScached = nil;
 
 local gAutoSingleton = 0;
 
@@ -154,13 +147,10 @@ local gJustPosted_BuyoutPrice;
 local gJustPosted_StackSize;
 local gJustPosted_NumStacks;
 
-local auctionator_pending_message = nil;
-
 local kBagIDs = {};
 
 local Atr_Confirm_Proc_Yes = nil;
 
-local gStartingTime			= time();
 local gHentryTryAgain		= nil;
 local gCondensedThisSession = {};
 
@@ -175,7 +165,6 @@ local gAtr_SellTriggeredByAuctionator = false;
 
 local gSellPane;
 local gMorePane;
-local gActivePane;
 local gShopPane;
 
 local gCurrentPane;
@@ -324,8 +313,6 @@ end
 
 
 -----------------------------------------
-
-local auctionator_orig_GetAuctionItemInfo;
 
 function Atr_SetupHookFunctions ()
 
@@ -512,7 +499,7 @@ end
 
 -----------------------------------------
 
-local function Atr_GetAuctionatorMemString(msg)
+local function Atr_GetAuctionatorMemString(_msg)
 
 	UpdateAddOnMemoryUsage();
 
@@ -524,7 +511,7 @@ end
 
 local function Atr_SlashCmdFunction(msg)
 
-	local cmd, param1u, param2u, param3u = zc.words (msg);
+	local cmd, param1u, param2u = zc.words (msg);
 
 	if (cmd == nil or type (cmd) ~= "string") then
 		return;
@@ -533,7 +520,6 @@ local function Atr_SlashCmdFunction(msg)
 		  cmd    = cmd     and cmd:lower()    or nil;
 	local param1 = param1u and param1u:lower() or nil;
 	local param2 = param2u and param2u:lower() or nil;
-	local param3 = param3u and param3u:lower() or nil;
 
 	if (cmd == "mem") then
 
@@ -571,10 +557,10 @@ local function Atr_SlashCmdFunction(msg)
 
 		zc.msg_atr ("memory usage: "..Atr_GetAuctionatorMemString());
 
-	elseif (Atr_HandleDevCommands and Atr_HandleDevCommands (cmd, param1, param2)) then
-		-- do nothing
 	else
-		zc.msg_atr (ZT("unrecognized command"));
+		if not (Atr_HandleDevCommands and Atr_HandleDevCommands (cmd, param1, param2)) then
+			zc.msg_atr (ZT("unrecognized command"));
+		end
 	end
 
 end
@@ -595,7 +581,6 @@ function Atr_InitScanDB()
 
 		AUCTIONATOR_PRICE_DATABASE[realm_Faction] = zc.CopyDeep (temp);
 
-		temp = {};
 	end
 
 	if (AUCTIONATOR_PRICE_DATABASE == nil) then
@@ -629,14 +614,11 @@ function Atr_OnLoad()
 	gTimeZero		= time({year=2000, month=1, day=1, hour=0});
 	gTimeTightZero	= time({year=2008, month=8, day=1, hour=0});
 
-	local x;
 	for x = 0, NUM_BAG_SLOTS do
 		kBagIDs[x+1] = x;
 	end
 
 	kBagIDs[NUM_BAG_SLOTS+2] = KEYRING_CONTAINER;
-
-	AuctionatorLoaded = true;
 
 	SlashCmdList["Auctionator"] = Atr_SlashCmdFunction;
 
@@ -715,8 +697,6 @@ end
 
 -----------------------------------------
 
-local gPrevTime = 0;
-
 function Atr_OnAddonLoaded(...)
 
 	local addonName = select (1, ...);
@@ -740,12 +720,6 @@ function Atr_OnAddonLoaded(...)
 	end
 
 	Atr_Check_For_Conflicts (addonName);
-
-	local now = time();
-
---	zc.md (addonName.."   time: "..now - gStartingTime);
-
-	gPrevTime = now;
 
 end
 
@@ -826,11 +800,9 @@ function Atr_Init()
 
 	-- create the lines that appear in the item history scroll pane
 
-	local line, n;
-
 	for n = 1, ITEM_HIST_NUM_LINES do
 		local y = -5 - ((n-1)*16);
-		line = CreateFrame("BUTTON", "AuctionatorHEntry"..n, Atr_Hlist, "Atr_HEntryTemplate");
+		local line = CreateFrame("BUTTON", "AuctionatorHEntry"..n, Atr_Hlist, "Atr_HEntryTemplate");
 		line:SetPoint("TOPLEFT", 0, y);
 	end
 
@@ -862,7 +834,7 @@ end
 
 function Atr_GetSellItemInfo ()
 
-	local auctionItemName, auctionTexture, auctionCount = GetAuctionSellItemInfo();
+	local auctionItemName, _, auctionCount = GetAuctionSellItemInfo();
 
 	if (auctionItemName == nil) then
 		auctionItemName = "";
@@ -875,8 +847,7 @@ function Atr_GetSellItemInfo ()
 
 	if (auctionItemName ~= "") then
 		AtrScanningTooltip:SetAuctionSellItem();
-		local name;
-		name, auctionItemLink = AtrScanningTooltip:GetItem();
+		auctionItemLink = select(2, AtrScanningTooltip:GetItem());
 
 		if (auctionItemLink == nil) then
 			return "",0,nil;
@@ -942,15 +913,6 @@ local gOrig_ContainerFrameItemButton_OnClick = nil;
 
 -----------------------------------------
 
-local function Atr_SwitchTo_OurItemOnClick ()
-
-    -- Disabled: do not override Blizzard bag click. We only support Alt+RightClick via the modified-click hook.
-    return;
-
-end
-
------------------------------------------
-
 local function Atr_SwitchTo_BlizzItemOnClick ()
 
     -- Restore Blizzard's bag button OnClick if we swapped it.
@@ -978,7 +940,6 @@ function Atr_AuctionFrameTab_OnClick (self, index, down)
 
 
 	if (not Atr_IsAuctionatorTab(index)) then
-		gForceMsgAreaUpdate = true;
 		Atr_HideAllDialogs();
 		AuctionFrameMoneyFrame:Show();
 
@@ -1186,17 +1147,17 @@ end
 
 -----------------------------------------
 
-function Atr_SellItemButton_OnClick (self, button, ...)
+function Atr_SellItemButton_OnClick (self, button)
 
 	Atr_ClickAuctionSellItemButton (self, button);
 end
 
 -----------------------------------------
 
-function Atr_SellItemButton_OnEvent (self, event, ...)
+function Atr_SellItemButton_OnEvent (_self, event)
 
 	if ( event == "NEW_AUCTION_UPDATE") then
-		local name, texture, count, quality, canUse, price = GetAuctionSellItemInfo();
+		local _, texture = GetAuctionSellItemInfo();
 		Atr_SellControls_Tex:SetNormalTexture(texture);
 	end
 
@@ -1376,7 +1337,7 @@ local function Atr_SB_Item_OnEnter(self)
     end
 end
 
-local function Atr_SB_Item_OnLeave(self)
+local function Atr_SB_Item_OnLeave(_self)
     GameTooltip:Hide();
 end
 
@@ -1399,10 +1360,10 @@ function Atr_SB_Build()
     for bag = 0, NUM_BAG_SLOTS do
         local numSlots = GetContainerNumSlots(bag) or 0;
         for slot = 1, numSlots do
-            local texture, itemCount, locked, quality, readable, lootable, itemLink = GetContainerItemInfo(bag, slot);
+            local texture, itemCount, _, quality, _, _, itemLink = GetContainerItemInfo(bag, slot);
             local link = itemLink or GetContainerItemLink(bag, slot);
             if (link and Atr_IsItemSellableOnAH(bag, slot, link, quality)) then
-                local name, _, _, _, _, sType, sSubType, _, _, icon = GetItemInfo(link);
+                local _, _, _, _, _, sType, _, _, _, icon = GetItemInfo(link);
                 local classIdx = sType and Atr_ItemType2AuctionClass(sType) or 0;
                 if (classIdx) then
                     local cat = sType or ZT("Other");
@@ -1519,17 +1480,14 @@ function Atr_SB_BagUpdate()
     -- Skip or defer during combat/flight/loading screens or immediate post-zone period
     if (UnitAffectingCombat("player") or (UnitOnTaxi and UnitOnTaxi("player")) or GetPlayerMapPosition("player") == nil
         or gAtr_SuspendForLoading or (gAtr_SuspendUntilTime and time() < gAtr_SuspendUntilTime)) then
-        gAtr_PendingBagRebuild = true;
         return;
     end
     -- Throttle to at most once per second to avoid BAG_UPDATE storms
     local now = time();
     if (gAtr_LastSBBuildAt and (now - gAtr_LastSBBuildAt) < 1) then
-        gAtr_PendingBagRebuild = true;
         return;
     end
     gAtr_LastSBBuildAt = now;
-    gAtr_PendingBagRebuild = false;
     if (gSB_Visible and Atr_SellBrowser and Atr_SellBrowser:IsShown()) then
         Atr_SB_Build();
     end
@@ -1823,8 +1781,7 @@ function AuctionatorSubtractFromScan (itemName, stackSize, buyoutPrice, howMany)
 
 	local scan = Atr_FindScan (itemName);
 
-	local x;
-	for x = 1, howMany do
+	for _ = 1, howMany do
 		scan:SubtractScanItem (itemName, stackSize, buyoutPrice);
 	end
 
@@ -1935,7 +1892,7 @@ function Atr_HideElems (tt)
 		return;
 	end
 
-	for i,x in ipairs(tt) do
+	for _,x in ipairs(tt) do
 		x:Hide();
 	end
 end
@@ -1944,7 +1901,7 @@ end
 
 function Atr_ShowElems (tt)
 
-	for i,x in ipairs(tt) do
+	for _,x in ipairs(tt) do
 		x:Show();
 	end
 end
@@ -1954,7 +1911,7 @@ end
 
 -----------------------------------------
 
-function Atr_OnAuctionUpdate (...)
+function Atr_OnAuctionUpdate ()
 
 
 	if (gAtr_FullScanState == ATR_FS_STARTED) then
@@ -2069,8 +2026,6 @@ function Atr_ClearList ()
 
 	Atr_Col1_Heading_Button:Hide();
 	Atr_Col3_Heading_Button:Hide();
-
-	local line;							-- 1 through 12 of our window to scroll
 
 	FauxScrollFrame_Update (AuctionatorScrollFrame, 0, 12, 16);
 
@@ -2217,16 +2172,16 @@ function Atr_Condense_History (itemname)
 	local absNowYear, absNowMonth, absNowDay = CalcAbsTimes (now, nowt);
 
 	local n = 1;
-	local tag, hist, newtag, stacksize, numauctions;
 	for tag, hist in pairs (AUCTIONATOR_PRICING_HISTORY[itemname]) do
 		if (tag ~= "is") then
 
-			local when, type, price, stacksize, numauctions = ParseHist (tag, hist);
+			local when, _, price, stacksize, numauctions = ParseHist (tag, hist);
 
 			local whnt = date("*t", when);
 
 			local absYear, absMonth, absDay	= CalcAbsTimes (when, whnt);
 
+			local newtag;
 			if (absNowYear - absYear >= 3) then
 				newtag = BuildHtag ("hy", whnt.year, 1, 1);
 			elseif (absNowMonth - absMonth >= 2) then
@@ -2256,8 +2211,6 @@ function Atr_Condense_History (itemname)
 
 	-- repopulate the history
 
-	local x;
-
 	for x = 1,#tempHistory do
 
 		local thist		= tempHistory[x];
@@ -2265,7 +2218,7 @@ function Atr_Condense_History (itemname)
 
 		if (AUCTIONATOR_PRICING_HISTORY[itemname][newtag] == nil) then
 
-			local when, type = ParseHtag (newtag);
+			local _, type = ParseHtag (newtag);
 
 			local count = thist.numauctions;
 			if (type == "hx") then
@@ -2278,7 +2231,7 @@ function Atr_Condense_History (itemname)
 
 			local hist = AUCTIONATOR_PRICING_HISTORY[itemname][newtag];
 
-			local when, type, price, stacksize, numauctions = ParseHist (newtag, hist);
+			local _, _, price, _, numauctions = ParseHist (newtag, hist);
 
 			local newNumAuctions = numauctions + thist.numauctions;
 			local newPrice		 = ((price * numauctions) + (thist.price * thist.numauctions)) / newNumAuctions;
@@ -2314,7 +2267,6 @@ function Atr_Process_Historydata ()
 
 	if (AUCTIONATOR_PRICING_HISTORY[itemName]) then
 		local n = 1;
-		local tag, hist;
 		for tag, hist in pairs (AUCTIONATOR_PRICING_HISTORY[itemName]) do
 			if (tag ~= "is") then
 				local when, type, price, stacksize, numauctions = ParseHist (tag, hist);
@@ -2352,11 +2304,9 @@ function Atr_GetMostRecentSale (itemName)
 	local recentWhen = 0;
 
 	if (AUCTIONATOR_PRICING_HISTORY and AUCTIONATOR_PRICING_HISTORY[itemName]) then
-		local n = 1;
-		local tag, hist;
 		for tag, hist in pairs (AUCTIONATOR_PRICING_HISTORY[itemName]) do
 			if (tag ~= "is") then
-				local when, type, price = ParseHist (tag, hist);
+				local when, _, price = ParseHist (tag, hist);
 
 				if (when > recentWhen) then
 					recentPrice = price;
@@ -2424,52 +2374,52 @@ function Atr_UpdateRecommendation (updatePrices)
 
 	local basedata;
 
-	if (Atr_ShowingSearchSummary()) then
+	if (not Atr_ShowingSearchSummary()) then
+		if (Atr_ShowingCurrentAuctions()) then
 
-	elseif (Atr_ShowingCurrentAuctions()) then
-
-		if (gCurrentPane:GetProcessingState() ~= KM_NULL_STATE) then
-			return;
-		end
-
-		if (#gCurrentPane.activeScan.sortedData == 0) then
-			Atr_SetMessage (ZT("No current auctions found"));
-			return;
-		end
-
-		if (not gCurrentPane.currIndex) then
-			if (gCurrentPane.activeScan.numMatches == 0) then
-				Atr_SetMessage (ZT("No current auctions found\n\n(related auctions shown)"));
-			elseif (gCurrentPane.activeScan.numMatchesWithBuyout == 0) then
-				Atr_SetMessage (ZT("No current auctions with buyouts found"));
-			else
-				Atr_SetMessage ("");
+			if (gCurrentPane:GetProcessingState() ~= KM_NULL_STATE) then
+				return;
 			end
-			return;
-		end
 
-		basedata = gCurrentPane.activeScan.sortedData[gCurrentPane.currIndex];
+			if (#gCurrentPane.activeScan.sortedData == 0) then
+				Atr_SetMessage (ZT("No current auctions found"));
+				return;
+			end
 
-	elseif (Atr_ShowingHistory()) then
+			if (not gCurrentPane.currIndex) then
+				if (gCurrentPane.activeScan.numMatches == 0) then
+					Atr_SetMessage (ZT("No current auctions found\n\n(related auctions shown)"));
+				elseif (gCurrentPane.activeScan.numMatchesWithBuyout == 0) then
+					Atr_SetMessage (ZT("No current auctions with buyouts found"));
+				else
+					Atr_SetMessage ("");
+				end
+				return;
+			end
 
-		basedata = zc.GetArrayElemOrFirst (gCurrentPane.sortedHist, gCurrentPane.histIndex);
+			basedata = gCurrentPane.activeScan.sortedData[gCurrentPane.currIndex];
 
-		if (basedata == nil) then
-			Atr_SetMessage (ZT("Auctionator has yet to record any auctions for this item"));
-			return;
-		end
+		elseif (Atr_ShowingHistory()) then
 
-	else	-- hints
+			basedata = zc.GetArrayElemOrFirst (gCurrentPane.sortedHist, gCurrentPane.histIndex);
 
-		local data = zc.GetArrayElemOrFirst (gCurrentPane.hints, gCurrentPane.hintsIndex);
+			if (basedata == nil) then
+				Atr_SetMessage (ZT("Auctionator has yet to record any auctions for this item"));
+				return;
+			end
 
-		if (data) then
-			basedata = {};
-			basedata.itemPrice		= data.price;
-			basedata.buyoutPrice	= data.price;
-			basedata.stackSize		= 1;
-			basedata.sourceText		= data.text;
-			basedata.yours			= true;		-- so no discounting
+		else	-- hints
+
+			local data = zc.GetArrayElemOrFirst (gCurrentPane.hints, gCurrentPane.hintsIndex);
+
+			if (data) then
+				basedata = {};
+				basedata.itemPrice		= data.price;
+				basedata.buyoutPrice	= data.price;
+				basedata.stackSize		= 1;
+				basedata.sourceText		= data.text;
+				basedata.yours			= true;		-- so no discounting
+			end
 		end
 	end
 
@@ -2589,7 +2539,7 @@ end
 
 -----------------------------------------
 
-function Atr_NumAuctionsChangedFunc (x)
+function Atr_NumAuctionsChangedFunc (_x)
 
 --	Atr_MemorizeButton:Show();
 
@@ -2759,7 +2709,6 @@ function Atr_OnWhoListUpdate()
 		gSendZoneMsgs = false;
 
 		local numWhos, totalCount = GetNumWhoResults();
-		local i;
 
 		zc.md (numWhos.." out of "..totalCount.." users found");
 
@@ -2818,7 +2767,7 @@ end
 local verCheckMsgState = 0;
 -----------------------------------------
 
-function Atr_Idle(self, elapsed)
+function Atr_Idle(_self, _elapsed)
 
 
 	if (gCurrentPane and gCurrentPane.tooltipvisible) then
@@ -3249,7 +3198,6 @@ function Atr_DisplayHlist ()
 
 	local numrows = #gHistoryItemList;
 
-	local line;							-- 1 through NN of our window to scroll
 	local dataOffset;					-- an index into our data calculated from the scroll offset
 
 	FauxScrollFrame_Update (Atr_Hlist_ScrollFrame, numrows, ITEM_HIST_NUM_LINES, 16);
@@ -3297,7 +3245,6 @@ end
 -----------------------------------------
 
 function Atr_ClearHlist ()
-	local line;
 	for line = 1,ITEM_HIST_NUM_LINES do
 		local lineEntry = _G["AuctionatorHEntry"..line];
 		lineEntry:Hide();
@@ -3338,7 +3285,7 @@ function Atr_HEntryOnClick(self)
 	if (AUCTIONATOR_PRICING_HISTORY[itemName]) then
 		local itemId, suffixId, uniqueId = strsplit(":", AUCTIONATOR_PRICING_HISTORY[itemName]["is"])
 
-		local itemId	= tonumber(itemId);
+		itemId = tonumber(itemId);
 
 		if (suffixId == nil) then	suffixId = 0;
 		else		 				suffixId = tonumber(suffixId);
@@ -3420,20 +3367,10 @@ end
 
 function Atr_BuildHistItemText(data)
 
-	local stacktext = "";
---	if (data.stackSize > 1) then
---		stacktext = " (stack of "..data.stackSize..")";
---	end
-
-	local now		= time();
 	local nowtime	= date ("*t");
 
 	local when		= data.when;
 	local whentime	= date ("*t", when);
-
-	local numauctions = data.stackSize;
-
-	local datestr = "";
 
 	if (data.type == "hy") then
 		return ZT("average of your auctions for").." "..whentime.year;
@@ -3476,7 +3413,7 @@ end
 
 -----------------------------------------
 
-function Atr_HideLineTooltip (self)
+function Atr_HideLineTooltip (_self)
 	GameTooltip:Hide();
 end
 
@@ -3698,12 +3635,11 @@ function Atr_ShowCurrentAuctions()
 
 			Atr_SetMFcolor (lineEntry_item_tag);
 
-			local entrytext = "";
-
 			if (data.type == "n") then
 
 				lineEntry:Show();
 
+				local entrytext;
 				if (data.count == 1) then
 					entrytext = string.format ("%i %s %i", data.count, ZT ("stack of"), data.stackSize);
 				else
@@ -3781,7 +3717,6 @@ function Atr_ShowHistory ()
 		Atr_Col3_Heading:Show();
 	end
 
-	local line;							-- 1 through 12 of our window to scroll
 	local dataOffset;					-- an index into our data calculated from the scroll offset
 
 	FauxScrollFrame_Update (AuctionatorScrollFrame, numrows, 12, 16);
@@ -3858,8 +3793,6 @@ end
 
 function Atr_HighlightEntry(entryIndex)
 
-	local line;				-- 1 through 12 of our window to scroll
-
 	for line = 1,12 do
 
 		local lineEntry = _G["AuctionatorEntry"..line];
@@ -3913,10 +3846,14 @@ function Atr_EntryOnClick(entry)
 
 	local entryIndex = entry:GetID();
 
-	if     (Atr_ShowingSearchSummary()) 	then
-	elseif (Atr_ShowingCurrentAuctions())	then		gCurrentPane.currIndex = entryIndex;
-	elseif (Atr_ShowingHistory())			then		gCurrentPane.histIndex = entryIndex;
-	else												gCurrentPane.hintsIndex = entryIndex;
+	if (not Atr_ShowingSearchSummary()) then
+		if (Atr_ShowingCurrentAuctions()) then
+			gCurrentPane.currIndex = entryIndex;
+		elseif (Atr_ShowingHistory()) then
+			gCurrentPane.histIndex = entryIndex;
+		else
+			gCurrentPane.hintsIndex = entryIndex;
+		end
 	end
 
 	if (Atr_ShowingSearchSummary()) then
@@ -3953,7 +3890,7 @@ end
 function Atr_GetNumItemInBags (theItemName)
 
 	local numItems = 0;
-	local b, bagID, slotID, numslots;
+	local bagID, numslots;
 
 	for b = 1, #kBagIDs do
 		bagID = kBagIDs[b];
@@ -3963,7 +3900,7 @@ function Atr_GetNumItemInBags (theItemName)
 			local itemLink = GetContainerItemLink(bagID, slotID);
 			if (itemLink) then
 				local itemName				= GetItemInfo(itemLink);
-				local texture, itemCount	= GetContainerItemInfo(bagID, slotID);
+				local _, itemCount	= GetContainerItemInfo(bagID, slotID);
 
 				if (itemName == theItemName) then
 					numItems = numItems + itemCount;
@@ -4056,7 +3993,6 @@ function Atr_CancelAuction_ByIndex(index)
 	if (#gAtr_Owner_Item_Indices == 0) then
 
 		local numInList = GetNumAuctionItems ("owner");
-		local i;
 		local x = 1;
 
 		for i = 1,numInList do
@@ -4161,7 +4097,6 @@ function Atr_GetStackingPrefs_ByItem (itemLink)
 	if (itemLink) then
 
 		local itemName = GetItemInfo (itemLink);
-		local text, spinfo;
 
 		for text, spinfo in pairs (AUCTIONATOR_STACKING_PREFS) do
 
@@ -4242,14 +4177,12 @@ end
 
 -----------------------------------------
 
-local gInitial_NumStacks;
 local gInitial_StackSize;
 
 -----------------------------------------
 
 function Atr_SetInitialStacking (numStacks, stackSize)
 
-	gInitial_NumStacks = numStacks;
 	gInitial_StackSize = stackSize;
 
 	Atr_Batch_NumAuctions:SetText (numStacks);
@@ -4263,7 +4196,6 @@ function Atr_Memorize_Stacking_If ()
 	local newNumStacks = Atr_Batch_NumAuctions:GetNumber();
 	local newStackSize = Atr_StackSize();
 
-	local numStacksChanged = (tonumber (gInitial_NumStacks) ~= newNumStacks);
 	local stackSizeChanged = (tonumber (gInitial_StackSize) ~= newStackSize);
 
 	if (stackSizeChanged) then
@@ -4539,7 +4471,7 @@ function Atr_BuildGlobalHistoryList(full)
 	local n = 1;
 
 	if (full) then
-		for name,hist in pairs (AUCTIONATOR_PRICING_HISTORY) do
+		for name,_ in pairs (AUCTIONATOR_PRICING_HISTORY) do
 			gHistoryItemList[n] = name;
 			n = n + 1;
 		end
@@ -4548,7 +4480,6 @@ function Atr_BuildGlobalHistoryList(full)
 			Atr_BuildActiveAuctions();
 		end
 
-		local name;
 		for name, count in pairs (gActiveAuctions) do
 			if (name and count ~= 0) then
 				gHistoryItemList[n] = name;
@@ -4566,8 +4497,6 @@ end
 
 function Atr_FindHListIndexByName (itemName)
 
-	local x;
-
 	for x = 1, #gHistoryItemList do
 		if (itemName == gHistoryItemList[x]) then
 			return x;
@@ -4581,7 +4510,6 @@ end
 -----------------------------------------
 
 local gAtr_CheckingActive_State			= ATR_CACT_NULL;
-local gAtr_CheckingActive_Index;
 local gAtr_CheckingActive_NextItemName;
 local gAtr_CheckingActive_AndCancel		= false;
 
@@ -4764,7 +4692,6 @@ function Atr_ResetMassCancel ()
 
 	gAtr_MassCancelList = {};
 
-	local i;
 	local num = GetNumAuctionItems ("owner");
 	local x = 1;
 
@@ -4895,7 +4822,6 @@ function Atr_Item_Autocomplete(self)
 	-- first search shopping lists
 
 	local numLists = #AUCTIONATOR_SHOPPING_LISTS;
-	local n;
 
 	for n = 1,numLists do
 		local slist = AUCTIONATOR_SHOPPING_LISTS[n];
