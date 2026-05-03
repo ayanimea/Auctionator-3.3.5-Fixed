@@ -3123,10 +3123,11 @@ function Atr_SetDepositText()
 		-- Compute the deposit directly from the item's vendor sell price to avoid
 		-- relying on CalculateAuctionDeposit(), which can be inaccurate on 3.3.5
 		-- private servers that report a bugged item count via GetAuctionSellItemInfo.
-		-- Atr_GetSellValue returns 0 when item info is not yet cached; in that case
-		-- we clear the field rather than showing a misleading value.
-		local vendorPrice = Atr_GetSellValue(auctionLink);
-		if (vendorPrice == 0) then
+		-- Use select(11, GetItemInfo()) to detect uncached items (nil) separately
+		-- from items with a genuine 0 vendor price (0); clear the field only when
+		-- item data is not yet available.
+		local vendorPrice = select(11, GetItemInfo(auctionLink));
+		if (vendorPrice == nil) then
 			Atr_Deposit_Text:SetText("");
 			return;
 		end
