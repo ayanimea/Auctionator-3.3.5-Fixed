@@ -3106,10 +3106,11 @@ end
 
 -----------------------------------------
 
--- Field index of the vendor sell price in GetItemInfo's return values.
-local ITEM_INFO_VENDOR_PRICE_INDEX = 11;
 -- Standard WoW 3.3.5 AH deposit rate: 5% of vendor sell price per item per 12-hour period.
 local DEPOSIT_RATE = 0.05;
+-- Duration multipliers for AH deposit (12 h = 1×, 24 h = 2×, 48 h = 4×).
+-- Declared as a module-level constant so it is not re-allocated on every UI tick.
+local DEPOSIT_DURATION_FACTOR = {[1] = 1, [2] = 2, [3] = 4};
 
 function Atr_SetDepositText()
 
@@ -3121,9 +3122,15 @@ function Atr_SetDepositText()
 		-- Calculate deposit directly from vendor sell price to avoid the ~10x over-estimation
 		-- caused by CalculateAuctionDeposit returning the full sell-slot deposit while
 		-- GetAuctionSellItemInfo may report count=1 on some 3.3.5 private servers.
-		-- Duration multipliers: 12 h = 1×, 24 h = 2×, 48 h = 4×.
-		local vendorPrice    = auctionLink and (select(ITEM_INFO_VENDOR_PRICE_INDEX, GetItemInfo(auctionLink)) or 0) or 0;
-		local durationFactor = ({[1] = 1, [2] = 2, [3] = 4})[duration] or 1;
+		-- Atr_GetSellValue handles the select(11, GetItemInfo(...)) call with a fallback.
+		local vendorPrice = auctionLink and Atr_GetSellValue(auctionLink) or 0;
+		if (vendorPrice == 0) then
+			-- Item info not yet cached; show nothing rather than a misleading "1 copper".
+			Atr_Deposit_Text:SetText ("");
+			return;
+		end
+
+		local durationFactor = DEPOSIT_DURATION_FACTOR[duration] or 1;
 		local deposit        = math.max(1, math.floor(vendorPrice * Atr_StackSize() * DEPOSIT_RATE * durationFactor));
 
 		local numAuctionString = "";
