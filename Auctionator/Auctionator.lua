@@ -3108,18 +3108,26 @@ end
 
 function Atr_SetDepositText()
 
-	_, auctionCount = Atr_GetSellItemInfo();
+	local _, auctionCount, auctionLink = Atr_GetSellItemInfo();
 
 	if (auctionCount > 0) then
 		local duration = UIDropDownMenu_GetSelectedValue(Atr_Duration);
 
-		local deposit1 = CalculateAuctionDeposit (duration) / auctionCount;
+		-- Calculate deposit directly from vendor sell price to avoid the ~10x over-estimation
+		-- caused by CalculateAuctionDeposit returning the full sell-slot deposit while
+		-- GetAuctionSellItemInfo may report count=1 on some 3.3.5 private servers.
+		-- Standard WoW 3.3.5 deposit rate: 5% of vendor price per item per 12 h.
+		-- Duration multipliers: 12 h = 1×, 24 h = 2×, 48 h = 4×.
+		local vendorPrice   = auctionLink and (select(11, GetItemInfo(auctionLink)) or 0) or 0;
+		local durationFactor = ({[1] = 1, [2] = 2, [3] = 4})[duration] or 1;
+		local deposit       = math.max(1, math.floor(vendorPrice * Atr_StackSize() * 0.05 * durationFactor));
+
 		local numAuctionString = "";
 		if (Atr_Batch_NumAuctions:GetNumber() > 1) then
 			numAuctionString = "  |cffff55ff x"..Atr_Batch_NumAuctions:GetNumber();
 		end
 
-		Atr_Deposit_Text:SetText (ZT("Deposit")..":    "..zc.priceToMoneyString(deposit1 * Atr_StackSize(), true)..numAuctionString);
+		Atr_Deposit_Text:SetText (ZT("Deposit")..":    "..zc.priceToMoneyString(deposit, true)..numAuctionString);
 	else
 		Atr_Deposit_Text:SetText ("");
 	end

@@ -1354,10 +1354,10 @@ function Atr_FullScanFrameIdle()
             Atr_FullScanStatus:SetText (string.format ("Scanning (%s)", Atr_FullScan_GetDurString()));
         end
 
-        -- Hard stop after 20 seconds to avoid hanging on unresponsive servers
-        if (not gAtr_FullScanTimedOut and (time() - gAtr_FullScanStart) > 20) then
+        -- Hard stop after 20 minutes to avoid hanging on unresponsive servers
+        if (not gAtr_FullScanTimedOut and (time() - gAtr_FullScanStart) > 20 * 60) then
             gAtr_FullScanTimedOut = true;
-            gAtr_FullScanStopReason = "Stopped after 20s: server did not return all auctions";
+            gAtr_FullScanStopReason = "Stopped after 20 minutes: server did not return all auctions";
             -- Analyze whatever we have and proceed to cleanup/results
             Atr_FullScanAnalyze();
             return;
