@@ -3106,20 +3106,41 @@ end
 
 -----------------------------------------
 
+-- Standard WoW 3.3.5 faction AH deposit rate per 12 hours.
+local DEPOSIT_RATE = 0.15;
+
+-- Duration multipliers for AH deposit (12 h = 1×, 24 h = 2×, 48 h = 4×).
+-- Declared as a module-level constant so it is not re-allocated on every UI tick.
+local DEPOSIT_DURATION_FACTOR = {[1] = 1, [2] = 2, [3] = 4};
+
 function Atr_SetDepositText()
 
-	_, auctionCount = Atr_GetSellItemInfo();
+	local _, _, auctionLink = Atr_GetSellItemInfo();
 
-	if (auctionCount > 0) then
+	if (auctionLink) then
 		local duration = UIDropDownMenu_GetSelectedValue(Atr_Duration);
 
-		local deposit1 = CalculateAuctionDeposit (duration) / auctionCount;
+		-- Compute the deposit directly from the item's vendor sell price to avoid
+		-- relying on CalculateAuctionDeposit(), which can be inaccurate on 3.3.5
+		-- private servers that report a bugged item count via GetAuctionSellItemInfo.
+		-- Use select(11, GetItemInfo()) to detect uncached items (nil) separately
+		-- from items with a genuine 0 vendor price (0); clear the field only when
+		-- item data is not yet available.
+		local vendorPrice = select(11, GetItemInfo(auctionLink));
+		if (vendorPrice == nil) then
+			Atr_Deposit_Text:SetText("");
+			return;
+		end
+
+		local durationFactor = DEPOSIT_DURATION_FACTOR[duration] or 1;
+		local deposit        = math.max(1, zc.round(vendorPrice * DEPOSIT_RATE * Atr_StackSize() * durationFactor));
+
 		local numAuctionString = "";
 		if (Atr_Batch_NumAuctions:GetNumber() > 1) then
 			numAuctionString = "  |cffff55ff x"..Atr_Batch_NumAuctions:GetNumber();
 		end
 
-		Atr_Deposit_Text:SetText (ZT("Deposit")..":    "..zc.priceToMoneyString(deposit1 * Atr_StackSize(), true)..numAuctionString);
+		Atr_Deposit_Text:SetText (ZT("Deposit")..":    "..zc.priceToMoneyString(deposit, true)..numAuctionString);
 	else
 		Atr_Deposit_Text:SetText ("");
 	end
