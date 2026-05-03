@@ -3106,25 +3106,33 @@ end
 
 -----------------------------------------
 
+-- Standard WoW 3.3.5 faction AH deposit rate per 12 hours.
+local DEPOSIT_RATE = 0.15;
+
 -- Duration multipliers for AH deposit (12 h = 1×, 24 h = 2×, 48 h = 4×).
 -- Declared as a module-level constant so it is not re-allocated on every UI tick.
 local DEPOSIT_DURATION_FACTOR = {[1] = 1, [2] = 2, [3] = 4};
 
 function Atr_SetDepositText()
 
-	local _, auctionCount = Atr_GetSellItemInfo();
+	local _, _, auctionLink = Atr_GetSellItemInfo();
 
-	if (auctionCount > 0) then
+	if (auctionLink) then
 		local duration = UIDropDownMenu_GetSelectedValue(Atr_Duration);
 
-		-- Ask the game engine for the 12-h deposit cost for whatever is in the sell slot.
-		-- Dividing by itemsInSlot and multiplying by Atr_StackSize() re-scales to the
-		-- user's chosen stack, working around the "count=1 bug" reported by
-		-- GetAuctionSellItemInfo on some 3.3.5 private servers.
-		local itemsInSlot    = math.max(auctionCount, 1);
-		local deposit12h     = CalculateAuctionDeposit(1);
+		-- Compute the deposit directly from the item's vendor sell price to avoid
+		-- relying on CalculateAuctionDeposit(), which can be inaccurate on 3.3.5
+		-- private servers that report a bugged item count via GetAuctionSellItemInfo.
+		-- Atr_GetSellValue returns 0 when item info is not yet cached; in that case
+		-- we clear the field rather than showing a misleading value.
+		local vendorPrice = Atr_GetSellValue(auctionLink);
+		if (vendorPrice == 0) then
+			Atr_Deposit_Text:SetText("");
+			return;
+		end
+
 		local durationFactor = DEPOSIT_DURATION_FACTOR[duration] or 1;
-		local deposit        = math.max(1, zc.round((deposit12h / itemsInSlot) * Atr_StackSize() * durationFactor));
+		local deposit        = math.max(1, zc.round(vendorPrice * DEPOSIT_RATE * Atr_StackSize() * durationFactor));
 
 		local numAuctionString = "";
 		if (Atr_Batch_NumAuctions:GetNumber() > 1) then
