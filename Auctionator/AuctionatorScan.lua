@@ -13,8 +13,9 @@ local gAllScans = {};
 local BIGNUM = 999999999999;
 
 -- Hard-stop timeout for a full AH scan. Both the comparison and the user-facing
--- message are derived from this single constant to keep them in sync.
+-- message are derived from these constants to keep them in sync.
 local FULL_SCAN_TIMEOUT_SECONDS = 20 * 60;
+local FULL_SCAN_TIMEOUT_MINUTES = math.floor(FULL_SCAN_TIMEOUT_SECONDS / 60);
 
 local ATR_SORTBY_NAME_ASC = 0;
 local ATR_SORTBY_NAME_DES = 1;
@@ -1361,7 +1362,7 @@ function Atr_FullScanFrameIdle()
         -- Hard stop after FULL_SCAN_TIMEOUT_SECONDS to avoid hanging on unresponsive servers
         if (not gAtr_FullScanTimedOut and (time() - gAtr_FullScanStart) > FULL_SCAN_TIMEOUT_SECONDS) then
             gAtr_FullScanTimedOut = true;
-            gAtr_FullScanStopReason = string.format("Stopped after %d minutes: server did not return all auctions", FULL_SCAN_TIMEOUT_SECONDS / 60);
+            gAtr_FullScanStopReason = string.format("Stopped after %d minutes: server did not return all auctions", FULL_SCAN_TIMEOUT_MINUTES);
             -- Analyze whatever we have and proceed to cleanup/results
             Atr_FullScanAnalyze();
             return;

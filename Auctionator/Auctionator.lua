@@ -3117,15 +3117,14 @@ function Atr_SetDepositText()
 	if (auctionCount > 0) then
 		local duration = UIDropDownMenu_GetSelectedValue(Atr_Duration);
 
-		-- Derive the per-item 12-h deposit from the game engine so that the correct rate
-		-- is used automatically for both faction AH (15%) and neutral AH (75%).
-		-- Dividing CalculateAuctionDeposit(1) by slotCount and then multiplying by
-		-- Atr_StackSize() re-scales to the user's chosen stack, working around the
-		-- "count=1 bug" reported by GetAuctionSellItemInfo on some 3.3.5 private servers.
+		-- Ask the game engine for the 12-h deposit cost for whatever is in the sell slot.
+		-- Dividing by itemsInSlot and multiplying by Atr_StackSize() re-scales to the
+		-- user's chosen stack, working around the "count=1 bug" reported by
+		-- GetAuctionSellItemInfo on some 3.3.5 private servers.
 		local itemsInSlot    = math.max(auctionCount, 1);
 		local deposit12h     = CalculateAuctionDeposit(1);
 		local durationFactor = DEPOSIT_DURATION_FACTOR[duration] or 1;
-		local deposit        = math.max(1, math.floor((deposit12h / itemsInSlot) * Atr_StackSize() * durationFactor));
+		local deposit        = math.max(1, zc.round((deposit12h / itemsInSlot) * Atr_StackSize() * durationFactor));
 
 		local numAuctionString = "";
 		if (Atr_Batch_NumAuctions:GetNumber() > 1) then
