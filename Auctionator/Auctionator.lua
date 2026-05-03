@@ -3106,32 +3106,26 @@ end
 
 -----------------------------------------
 
--- Standard WoW 3.3.5 AH deposit rate: 5% of vendor sell price per item per 12-hour period.
-local DEPOSIT_RATE = 0.05;
 -- Duration multipliers for AH deposit (12 h = 1×, 24 h = 2×, 48 h = 4×).
 -- Declared as a module-level constant so it is not re-allocated on every UI tick.
 local DEPOSIT_DURATION_FACTOR = {[1] = 1, [2] = 2, [3] = 4};
 
 function Atr_SetDepositText()
 
-	local _, auctionCount, auctionLink = Atr_GetSellItemInfo();
+	local _, auctionCount = Atr_GetSellItemInfo();
 
 	if (auctionCount > 0) then
 		local duration = UIDropDownMenu_GetSelectedValue(Atr_Duration);
 
-		-- Calculate deposit directly from vendor sell price to avoid the ~10x over-estimation
-		-- caused by CalculateAuctionDeposit returning the full sell-slot deposit while
-		-- GetAuctionSellItemInfo may report count=1 on some 3.3.5 private servers.
-		-- Atr_GetSellValue handles the select(11, GetItemInfo(...)) call with a fallback.
-		local vendorPrice = auctionLink and Atr_GetSellValue(auctionLink) or 0;
-		if (vendorPrice == 0) then
-			-- Item info not yet cached; show nothing rather than a misleading "1 copper".
-			Atr_Deposit_Text:SetText ("");
-			return;
-		end
-
+		-- Derive the per-item 12-h deposit from the game engine so that the correct rate
+		-- is used automatically for both faction AH (15%) and neutral AH (75%).
+		-- Dividing CalculateAuctionDeposit(1) by slotCount and then multiplying by
+		-- Atr_StackSize() re-scales to the user's chosen stack, working around the
+		-- "count=1 bug" reported by GetAuctionSellItemInfo on some 3.3.5 private servers.
+		local itemsInSlot    = math.max(auctionCount, 1);
+		local deposit12h     = CalculateAuctionDeposit(1);
 		local durationFactor = DEPOSIT_DURATION_FACTOR[duration] or 1;
-		local deposit        = math.max(1, math.floor(vendorPrice * Atr_StackSize() * DEPOSIT_RATE * durationFactor));
+		local deposit        = math.max(1, math.floor((deposit12h / itemsInSlot) * Atr_StackSize() * durationFactor));
 
 		local numAuctionString = "";
 		if (Atr_Batch_NumAuctions:GetNumber() > 1) then
